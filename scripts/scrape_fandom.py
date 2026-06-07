@@ -29,11 +29,37 @@ PAGES = {
     "Tom_Riddle": "Tom_Riddle.txt",
     "Draco_Malfoy": "Draco_Malfoy.txt",
     "Albus_Dumbledore": "Albus_Dumbledore.txt",
+    "Percival_Dumbledore": "Percival_Dumbledore",
+    "Nagini": "Nagini.txt",
+    # Персонажи ФТ
+    "Porpentina_Goldstein": "Porpentina_Goldstein.txt",
+    "Newton_Scamander": "Newton_Scamander.txt",
+    "Queenie_Goldstein": "Queenie_Goldstein.txt",
+    "Theseus_Scamander": "Theseus_Scamander.txt",
+    "Yusuf_Kama": "Yusuf_Kama.txt",
+    "Leta_Lestrange": "Leta_Lestrange.txt",
+    "Gellert_Grindelwald": "Gellert_Grindelwald.txt",
+    "Ariana_Dumbledore": "Ariana_Dumbledore.txt",
+    "Aurelius_Dumbledore": "Aurelius_Dumbledore.txt",
+    "Obscurial": "Obscurial.txt",
+    "Aberforth_Dumbledore": "Aberforth_Dumbledore.txt",
     # Книги
-    "Harry_Potter_and_the_Philosopher%27s_Stone": "Harry_Potter_and_the_Philosopher%27s_Stone.txt",
-  
+    "Harry_Potter_and_the_Philosopher's_Stone": "Harry_Potter_and_the_Philosopher's_Stone.txt",
+    "Harry_Potter_and_the_Chamber_of_Secrets": "Harry_Potter_and_the_Chamber_of_Secrets.txt",
+    "Harry_Potter_and_the_Prisoner_of_Azkaban": "Harry_Potter_and_the_Prisoner_of_Azkaban.txt",
+    "Harry_Potter_and_the_Goblet_of_Fire": "Harry_Potter_and_the_Goblet_of_Fire.txt",
+    "Harry_Potter_and_the_Order_of_the_Phoenix": "Harry_Potter_and_the_Order_of_the_Phoenix.txt",
+    "Harry_Potter_and_the_Half-Blood_Prince": "Harry_Potter_and_the_Half-Blood_Prince.txt",
+    "Harry_Potter_and_the_Deathly_Hallows": "Harry_Potter_and_the_Deathly_Hallows.txt",
     # Фильмы
-   
+    "Harry_Potter_and_the_Philosopher's_Stone": "Harry_Potter_and_the_Philosopher's_Stone.txt",
+    "Harry_Potter_and_the_Chamber_of_Secrets": "Harry_Potter_and_the_Chamber_of_Secrets.txt",
+    "Harry_Potter_and_the_Prisoner_of_Azkaban": "Harry_Potter_and_the_Prisoner_of_Azkaban.txt",
+    "Harry_Potter_and_the_Goblet_of_Fire": "Harry_Potter_and_the_Goblet_of_Fire.txt",
+    "Harry_Potter_and_the_Order_of_the_Phoenix": "Harry_Potter_and_the_Order_of_the_Phoenix.txt",
+    "Harry_Potter_and_the_Half-Blood_Prince": "Harry_Potter_and_the_Half-Blood_Prince.txt",
+    "Harry_Potter_and_the_Deathly_Hallows:_Part_1": "Harry_Potter_and_the_Deathly_Hallows:_Part_1.txt",
+    "Harry_Potter_and_the_Deathly_Hallows:_Part_2": "Harry_Potter_and_the_Deathly_Hallows:_Part_1.txt",
 }
 
 BASE_URL = "https://harrypotter.fandom.com/wiki/"
