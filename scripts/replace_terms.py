@@ -1,3 +1,5 @@
+
+# -*- coding: utf-8 -*-
 """
 Задание 2: Замена терминов Marvel → QuantumForge.
 

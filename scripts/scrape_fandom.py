@@ -1,148 +1,487 @@
-"""
-Задание 2: Парсинг Harry Potter Fandom Wiki.
-
-Скрипт скачивает 30+ статей с harrypotter.fandom.com,
-очищает от HTML-разметки и сохраняет как текстовые файлы.
-"""
-
 import io
 import os
 import re
 import sys
 import time
+import subprocess
+from typing import Optional
 
-# Принудительный UTF-8 для Windows-консоли
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-
-import requests
 from bs4 import BeautifulSoup
 
-# Список страниц для скачивания
+# ==========================================
+# UTF-8
+# ==========================================
+
+if hasattr(sys.stdout, "buffer"):
+    sys.stdout = io.TextIOWrapper(
+        sys.stdout.buffer,
+        encoding="utf-8",
+        errors="replace"
+    )
+
+# ==========================================
+# НАСТРОЙКИ
+# ==========================================
+
 PAGES = {
-    # Персонажи
     "Harry_Potter": "Harry_Potter.txt",
     "Hermione_Granger": "Hermione_Granger.txt",
-    "Ronald_Weasley": "Ronald_Weasley.txt",
+    "Ron_Weasley": "Ron_Weasley.txt",
+    "Luna_Lovegood": "Luna_Lovegood.txt",
     "Ginevra_Weasley": "Ginevra_Weasley.txt",
     "Neville_Longbottom": "Neville_Longbottom.txt",
-    "Luna_Lovegood": "Luna_Lovegood.txt",
-    "Tom_Riddle": "Tom_Riddle.txt",
+    "Lord_Voldemort": "Lord_Voldemort.txt",
     "Draco_Malfoy": "Draco_Malfoy.txt",
     "Albus_Dumbledore": "Albus_Dumbledore.txt",
-    "Percival_Dumbledore": "Percival_Dumbledore",
-    "Nagini": "Nagini.txt",
-    # Персонажи ФТ
-    "Porpentina_Goldstein": "Porpentina_Goldstein.txt",
-    "Newton_Scamander": "Newton_Scamander.txt",
+    "Severus_Snape": "Severus_Snape.txt",
+    "Newt_Scamander": "Newt_Scamander.txt",
+    "Tina_Goldstein": "Tina_Goldstein.txt",
+    "Jacob_Kowalski": "Jacob_Kowalski.txt",
     "Queenie_Goldstein": "Queenie_Goldstein.txt",
     "Theseus_Scamander": "Theseus_Scamander.txt",
-    "Yusuf_Kama": "Yusuf_Kama.txt",
-    "Leta_Lestrange": "Leta_Lestrange.txt",
     "Gellert_Grindelwald": "Gellert_Grindelwald.txt",
-    "Ariana_Dumbledore": "Ariana_Dumbledore.txt",
-    "Aurelius_Dumbledore": "Aurelius_Dumbledore.txt",
-    "Obscurial": "Obscurial.txt",
+    "Credence_Barebone": "Credence_Barebone.txt",
     "Aberforth_Dumbledore": "Aberforth_Dumbledore.txt",
-    # Книги
+    "Yusuf_Kama": "Yusuf_Kama.txt",
+    "James_Potter_(I)": "James_Potter_(I).txt",
+    "James_Potter_(II)": "James_Potter_(II).txt",
+    "Arthur_Weasley": "Arthur_Weasley.txt",
+    "Molly_Weasley": "Molly_Weasley.txt",
+    "William_Weasley": "William_Weasley.txt",
+    "Charles_Weasley": "Charles_Weasley.txt",
+    "Percy_Weasley": "Percy_Weasley.txt",
+    "Fred_Weasley": "Fred_Weasley.txt",
+    "George_Weasley": "George_Weasley.txt",
+    "Cho_Chang": "Cho_Chang.txt",
+    "Dementor": "Dementor.txt",
+    "Azkaban": "Azkaban.txt",
+    "Hogwarts_School_of_Witchcraft_and_Wizardry": "Hogwarts_School_of_Witchcraft_and_Wizardry.txt",
     "Harry_Potter_and_the_Philosopher's_Stone": "Harry_Potter_and_the_Philosopher's_Stone.txt",
     "Harry_Potter_and_the_Chamber_of_Secrets": "Harry_Potter_and_the_Chamber_of_Secrets.txt",
     "Harry_Potter_and_the_Prisoner_of_Azkaban": "Harry_Potter_and_the_Prisoner_of_Azkaban.txt",
     "Harry_Potter_and_the_Goblet_of_Fire": "Harry_Potter_and_the_Goblet_of_Fire.txt",
-    "Harry_Potter_and_the_Order_of_the_Phoenix": "Harry_Potter_and_the_Order_of_the_Phoenix.txt",
-    "Harry_Potter_and_the_Half-Blood_Prince": "Harry_Potter_and_the_Half-Blood_Prince.txt",
-    "Harry_Potter_and_the_Deathly_Hallows": "Harry_Potter_and_the_Deathly_Hallows.txt",
-    # Фильмы
-    "Harry_Potter_and_the_Philosopher's_Stone": "Harry_Potter_and_the_Philosopher's_Stone.txt",
-    "Harry_Potter_and_the_Chamber_of_Secrets": "Harry_Potter_and_the_Chamber_of_Secrets.txt",
-    "Harry_Potter_and_the_Prisoner_of_Azkaban": "Harry_Potter_and_the_Prisoner_of_Azkaban.txt",
-    "Harry_Potter_and_the_Goblet_of_Fire": "Harry_Potter_and_the_Goblet_of_Fire.txt",
-    "Harry_Potter_and_the_Order_of_the_Phoenix": "Harry_Potter_and_the_Order_of_the_Phoenix.txt",
-    "Harry_Potter_and_the_Half-Blood_Prince": "Harry_Potter_and_the_Half-Blood_Prince.txt",
-    "Harry_Potter_and_the_Deathly_Hallows:_Part_1": "Harry_Potter_and_the_Deathly_Hallows:_Part_1.txt",
-    "Harry_Potter_and_the_Deathly_Hallows:_Part_2": "Harry_Potter_and_the_Deathly_Hallows:_Part_1.txt",
 }
 
 BASE_URL = "https://harrypotter.fandom.com/wiki/"
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "knowledge_base")
+
+ROOT_DIR = os.path.dirname(
+    os.path.dirname(__file__)
+)
+
+OUTPUT_DIR = os.path.join(
+    ROOT_DIR,
+    "knowledge_base"
+)
+
+DEBUG_DIR = os.path.join(
+    ROOT_DIR,
+    "debug"
+)
+
+# ==========================================
+# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+# ==========================================
+
+def clean_text(text: str) -> str:
+
+    text = re.sub(r"\r\n", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = re.sub(r"[ \t]+", " ", text)
+
+    return text.strip()
 
 
-def clean_text(soup: BeautifulSoup) -> str:
-    """Извлечь и очистить текст статьи."""
-    # Удаляем ненужные элементы
-    for tag in soup.find_all(["script", "style", "nav", "footer", "header",
-                               "aside", "table", "sup", "figure"]):
+def save_debug_html(
+    html: str,
+    article_name: str
+):
+
+    os.makedirs(
+        DEBUG_DIR,
+        exist_ok=True
+    )
+
+    filepath = os.path.join(
+        DEBUG_DIR,
+        f"{article_name}.html"
+    )
+
+    with open(
+        filepath,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        f.write(html)
+
+    return filepath
+
+
+def save_debug_text(
+    text: str,
+    article_name: str
+):
+
+    filepath = os.path.join(
+        DEBUG_DIR,
+        f"{article_name}_text.txt"
+    )
+
+    with open(
+        filepath,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        f.write(text)
+
+    return filepath
+
+
+# ==========================================
+# SAFARI
+# ==========================================
+
+def get_safari_html() -> str:
+
+    script = """
+    tell application "Safari"
+        return source of front document
+    end tell
+    """
+
+    result = subprocess.run(
+        ["osascript", "-e", script],
+        capture_output=True,
+        text=True
+    )
+
+    return result.stdout
+
+
+def get_safari_title() -> str:
+
+    script = """
+    tell application "Safari"
+        return name of front document
+    end tell
+    """
+
+    result = subprocess.run(
+        ["osascript", "-e", script],
+        capture_output=True,
+        text=True
+    )
+
+    return result.stdout.strip()
+
+
+# ==========================================
+# ПРОВЕРКА CLOUDFLARE
+# ==========================================
+
+def is_cloudflare_html(
+    html: str,
+    title: str
+) -> bool:
+
+    title = title.lower()
+    html_lower = html.lower()
+
+    signatures = [
+        "just a moment",
+        "verify you are human",
+        "challenge-platform",
+        "cf-challenge",
+        "cf-turnstile",
+    ]
+
+    if any(sig in title for sig in signatures):
+        return True
+
+    if any(sig in html_lower for sig in signatures):
+        return True
+
+    return False
+
+
+# ==========================================
+# ИЗВЛЕЧЕНИЕ ТЕКСТА
+# ==========================================
+
+def extract_article_text(
+    html: str
+) -> Optional[str]:
+
+    soup = BeautifulSoup(
+        html,
+        "html.parser"
+    )
+
+    selectors = [
+        ".mw-parser-output",
+        "#mw-content-text",
+        "main",
+        "article",
+        '[role="main"]',
+        ".page-content",
+        ".main-container",
+    ]
+
+    content = None
+
+    for selector in selectors:
+
+        found = soup.select_one(
+            selector
+        )
+
+        if found:
+
+            print(
+                f"Найден контейнер: "
+                f"{selector}"
+            )
+
+            content = found
+            break
+
+    if not content:
+
+        print(
+            "Контейнер статьи "
+            "не найден."
+        )
+
+        body = soup.body
+
+        if body:
+
+            dump_path = os.path.join(
+                DEBUG_DIR,
+                "body_dump.html"
+            )
+
+            with open(
+                dump_path,
+                "w",
+                encoding="utf-8"
+            ) as f:
+
+                f.write(str(body))
+
+            print(
+                f"Body сохранён: "
+                f"{dump_path}"
+            )
+
+        return None
+
+    for tag in content.select(
+        "script,"
+        "style,"
+        "table,"
+        "nav,"
+        "aside,"
+        "figure,"
+        "sup"
+    ):
         tag.decompose()
 
-    # Находим основной контент
-    content = soup.find("div", {"class": "mw-parser-output"})
-    if not content:
-        content = soup.find("div", {"id": "content"})
-    if not content:
-        return ""
+    text = content.get_text(
+        separator="\n"
+    )
 
-    # Извлекаем текст
-    text = content.get_text(separator="\n")
-
-    # Очистка
     lines = []
+
     for line in text.split("\n"):
+
         line = line.strip()
+
         if not line:
             continue
-        # Пропускаем навигационные элементы
-        if line in ("[]", "Edit", "Edit source", "Contents"):
+
+        if line in {
+            "[edit]",
+            "[edit source]",
+            "[]"
+        }:
             continue
-        if line.startswith("Categories"):
-            break
+
         lines.append(line)
 
-    text = "\n".join(lines)
-    # Убираем множественные переносы строк
-    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = clean_text(
+        "\n".join(lines)
+    )
+
     return text
 
 
-def scrape_page(page_name: str) -> str:
-    """Скачать и очистить одну страницу."""
-    url = BASE_URL + page_name
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                       "AppleWebKit/537.36 (KHTML, like Gecko) "
-                       "Chrome/120.0.0.0 Safari/537.36"
-    }
-    response = requests.get(url, headers=headers, timeout=30)
-    response.raise_for_status()
+# ==========================================
+# ЗАГРУЗКА СТАТЬИ
+# ==========================================
 
-    soup = BeautifulSoup(response.text, "html.parser")
-    return clean_text(soup)
+def download_article(
+    article_name: str
+) -> Optional[str]:
 
+    url = BASE_URL + article_name
+
+    print(f"\nОткрываем Safari:")
+    print(url)
+
+    subprocess.run([
+        "open",
+        "-a",
+        "Safari",
+        url
+    ])
+
+    input(
+        "\nПосле загрузки страницы "
+        "нажмите Enter..."
+    )
+
+    html = get_safari_html()
+
+    title = get_safari_title()
+
+    print(f"\nTitle: {title}")
+    print(
+        f"Размер HTML: "
+        f"{len(html):,} символов"
+    )
+
+    debug_file = save_debug_html(
+        html,
+        article_name
+    )
+
+    print(
+        f"HTML сохранён: "
+        f"{debug_file}"
+    )
+
+    if is_cloudflare_html(
+        html,
+        title
+    ):
+
+        print(
+            "\nCloudflare всё ещё "
+            "активен."
+        )
+
+        return None
+
+    text = extract_article_text(
+        html
+    )
+
+    if text:
+
+        txt_file = save_debug_text(
+            text,
+            article_name
+        )
+
+        print(
+            f"Текст сохранён: "
+            f"{txt_file}"
+        )
+
+    return text
+
+
+# ==========================================
+# MAIN
+# ==========================================
 
 def main():
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    os.makedirs(
+        OUTPUT_DIR,
+        exist_ok=True
+    )
+
+    os.makedirs(
+        DEBUG_DIR,
+        exist_ok=True
+    )
+
     total = len(PAGES)
 
-    for i, (page_name, filename) in enumerate(PAGES.items(), 1):
-        filepath = os.path.join(OUTPUT_DIR, filename)
-        if os.path.exists(filepath):
-            print(f"[{i}/{total}] Пропуск {filename} (уже существует)")
-            continue
+    success = 0
+    failed = 0
 
-        print(f"[{i}/{total}] Скачивание {page_name}...")
-        try:
-            text = scrape_page(page_name)
-            if text:
-                with open(filepath, "w", encoding="utf-8") as f:
-                    f.write(text)
-                print(f"  -> Сохранено: {filename} ({len(text)} символов)")
-            else:
-                print(f"  -> Предупреждение: пустой текст для {page_name}")
-        except Exception as e:
-            print(f"  -> Ошибка: {e}")
+    print(
+        f"Начинаем загрузку "
+        f"{total} страниц..."
+    )
 
-        # Пауза между запросами
-        time.sleep(1.5)
+    for i, (
+        article,
+        filename
+    ) in enumerate(
+        PAGES.items(),
+        start=1
+    ):
 
-    print(f"\nГотово! Документы сохранены в {OUTPUT_DIR}")
+        print(
+            f"\n[{i}/{total}] "
+            f"{article}"
+        )
+
+        filepath = os.path.join(
+            OUTPUT_DIR,
+            filename
+        )
+
+        text = download_article(
+            article
+        )
+
+        if text:
+
+            with open(
+                filepath,
+                "w",
+                encoding="utf-8"
+            ) as f:
+
+                f.write(text)
+
+            print(
+                f"\nСохранено:"
+                f" {filepath}"
+            )
+
+            print(
+                "\nПервые "
+                "1000 символов:\n"
+            )
+
+            print(
+                text[:1000]
+            )
+
+            success += 1
+
+        else:
+
+            print(
+                "\nНе удалось "
+                "получить статью."
+            )
+
+            failed += 1
+
+        time.sleep(2)
+
+    print("\n================")
+    print(f"Успешно: {success}")
+    print(f"Ошибок: {failed}")
+    print("================")
 
 
 if __name__ == "__main__":
